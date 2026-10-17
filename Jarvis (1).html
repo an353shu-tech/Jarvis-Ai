@@ -1,0 +1,270 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JARVIS AI</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at center, #09243b, #020711 72%);
+  color: #70eaff;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 25px 16px;
+}
+
+h1 {
+  letter-spacing: 8px;
+  font-size: 30px;
+  text-shadow: 0 0 18px #00cfff;
+  margin-bottom: 5px;
+}
+
+.subtitle {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: #76a9bd;
+}
+
+.reactor {
+  width: 190px;
+  height: 190px;
+  border: 2px solid #23dfff;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  margin: 38px 0 24px;
+  box-shadow: 0 0 22px #008cff,
+              inset 0 0 25px #006a9c;
+  animation: glow 2s infinite alternate;
+}
+
+.core {
+  width: 112px;
+  height: 112px;
+  border: 3px dashed #6cf4ff;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 38px;
+  text-shadow: 0 0 18px cyan;
+}
+
+@keyframes glow {
+  from { transform: scale(1); }
+  to { transform: scale(1.04); }
+}
+
+#status {
+  color: #a0c8d7;
+  font-size: 13px;
+  margin: 5px 0 18px;
+  text-align: center;
+}
+
+button {
+  background: #06314a;
+  color: #80f2ff;
+  border: 1px solid #26cfff;
+  padding: 14px 22px;
+  border-radius: 8px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  box-shadow: 0 0 12px #007ca8;
+}
+
+button:active { background: #0a5472; }
+
+#output {
+  width: 100%;
+  max-width: 430px;
+  min-height: 120px;
+  margin-top: 24px;
+  border: 1px solid #14516a;
+  background: #04111dcc;
+  border-radius: 10px;
+  padding: 16px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.label {
+  color: #3bdfff;
+  font-size: 11px;
+  letter-spacing: 2px;
+}
+
+#reply { color: #d1f7ff; }
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+footer {
+  margin-top: 28px;
+  color: #426c80;
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>J.A.R.V.I.S</h1>
+<div class="subtitle">PERSONAL AI SYSTEM</div>
+
+<div class="reactor">
+  <div class="core">J</div>
+</div>
+
+<div id="status">SYSTEM ONLINE</div>
+
+<div class="controls">
+  <button id="listen">🎙 SPEAK TO JARVIS</button>
+  <button id="test">SYSTEM TEST</button>
+</div>
+
+<div id="output">
+  <div class="label">USER INPUT</div>
+  <div id="heard">Awaiting your command...</div>
+  <br>
+  <div class="label">JARVIS RESPONSE</div>
+  <div id="reply">All systems ready, sir.</div>
+</div>
+
+<footer>JARVIS INTERFACE • VERSION 1.0</footer>
+
+<script>
+const statusText = document.getElementById("status");
+const heard = document.getElementById("heard");
+const reply = document.getElementById("reply");
+
+
+function speak(text) {
+  if (!("speechSynthesis" in window)) return;
+
+  window.speechSynthesis.cancel();
+
+  const message = new SpeechSynthesisUtterance(text);
+
+  const voices = window.speechSynthesis.getVoices();
+
+  const voice =
+    voices.find(v => v.name.includes("Google US English")) ||
+    voices.find(v => v.lang === "en-US") ||
+    voices.find(v => v.lang === "en-GB");
+
+  if (voice) {
+    message.voice = voice;
+    message.lang = voice.lang;
+  } else {
+    message.lang = "en-US";
+  }
+
+  message.rate = 0.88;
+  message.pitch = 0.75;
+  message.volume = 1;
+
+  window.speechSynthesis.speak(message);
+}
+
+
+function respond(command) {
+  const text = command.toLowerCase();
+  let answer;
+
+  if (text.includes("hello") || text.includes("hi jarvis")) {
+    answer = "Hello sir. JARVIS is ready to assist you.";
+  } else if (text.includes("your name") || text.includes("who are you")) {
+    answer = "I am JARVIS, your personal assistant.";
+  } else if (text.includes("time")) {
+    answer = "The time is " +
+      new Date().toLocaleTimeString("en-IN", {
+        hour: "2-digit", minute: "2-digit"
+      });
+  } else if (text.includes("date")) {
+    answer = "Today's date is " +
+      new Date().toLocaleDateString("en-IN");
+  } else if (text.includes("how are you")) {
+    answer = "All systems are running smoothly, sir.";
+  } else if (text.includes("joke")) {
+    answer = "Why did the computer go to the doctor? Because it caught a virus!";
+  } else if (text.includes("thank")) {
+    answer = "You are welcome, sir.";
+  } else {
+    answer = "I heard you say: " + command +
+      ". My basic system cannot answer that yet.";
+  }
+
+  reply.textContent = answer;
+  statusText.textContent = "RESPONSE READY";
+  speak(answer);
+}
+
+document.getElementById("listen").addEventListener("click", () => {
+  const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    statusText.textContent =
+      "VOICE INPUT UNSUPPORTED. TRY CHROME.";
+    reply.textContent =
+      "Open this page in Chrome and try again.";
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = "en-IN";
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = () => {
+    statusText.textContent = "LISTENING...";
+    heard.textContent = "Listening for your command...";
+  };
+
+  recognition.onresult = (event) => {
+    const command =
+      event.results[0][0].transcript;
+
+    heard.textContent = command;
+    respond(command);
+  };
+
+  recognition.onerror = (event) => {
+    statusText.textContent = "VOICE ERROR: " + event.error;
+  };
+
+  recognition.onend = () => {
+    if (statusText.textContent === "LISTENING...") {
+      statusText.textContent = "SYSTEM ONLINE";
+    }
+  };
+
+  recognition.start();
+});
+
+document.getElementById("test").addEventListener("click", () => {
+  heard.textContent = "System diagnostic";
+  reply.textContent =
+    "Interface operational. JavaScript is working.";
+  statusText.textContent = "DIAGNOSTIC PASSED";
+  speak("System diagnostic passed, sir.");
+});
+</script>
+
+</body>
+</html>
